@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
@@ -24,9 +25,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        System.out.println("URL: " + userRequest.getClientRegistration().getRegistrationId());
-        System.out.println("Thread ID: " + Thread.currentThread().getId());
-
         Map<String, Object> oAuth2UserAttributes = super.loadUser(userRequest).getAttributes();
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
@@ -43,14 +41,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return new PrincipalDetails(member, oAuth2UserAttributes, userNameAttributeName);
     }
 
-    private MemberEntity getOrSave(OAuth2UserInfo oAuth2UserInfo) {
-        return memberRepository.findById(oAuth2UserInfo.getId())
-                .map(member -> {
-                    return memberRepository.save(member);
-                })
+    @Transactional
+    public MemberEntity getOrSave(OAuth2UserInfo oAuth2UserInfo) {
+        return memberRepository.findByMemberId(oAuth2UserInfo.getId())
                 .orElseGet(() -> {
                     MemberEntity newMember = MemberEntity.builder()
-                            .memberNo(oAuth2UserInfo.getId())
+                            .memberId(oAuth2UserInfo.getId())
                             .role(ROLE.USER)
                             .build();
                     return memberRepository.save(newMember);

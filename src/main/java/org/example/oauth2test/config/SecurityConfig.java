@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.oauth2test.filter.CustomOAuth2Filter;
 import org.example.oauth2test.filter.TokenAuthenticationFilter;
 import org.example.oauth2test.filter.TokenExceptionFilter;
+import org.example.oauth2test.handler.OAuth2FailureHandler;
 import org.example.oauth2test.handler.OAuth2SuccessHandler;
 import org.example.oauth2test.service.CustomOAuth2UserService;
+import org.example.oauth2test.util.TokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -25,8 +27,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final TokenAuthenticationFilter tokenAuthenticationFilter;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
+    private final TokenProvider tokenProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) {
@@ -36,11 +39,11 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2Login(oauth -> oauth.userInfoEndpoint(c -> c.userService(customOAuth2UserService)).successHandler(oAuth2SuccessHandler))
-                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new TokenExceptionFilter(), tokenAuthenticationFilter.getClass())
-                .addFilterBefore(new CustomOAuth2Filter(clientRegistrationRepository, customOAuth2UserService, oAuth2SuccessHandler), OAuth2AuthorizationRequestRedirectFilter.class)
-                .authorizeHttpRequests(request -> request.requestMatchers("/h2-console/**","/auth/success","/error","/login/**","/oauth2/**", "/favicon.ico").permitAll().anyRequest().authenticated())
+                .oauth2Login(oauth -> oauth.userInfoEndpoint(c -> c.userService(customOAuth2UserService)).successHandler(oAuth2SuccessHandler).failureHandler(oAuth2FailureHandler))
+                .addFilterBefore(new TokenAuthenticationFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new TokenExceptionFilter(), TokenAuthenticationFilter.class)
+                .addFilterBefore(new CustomOAuth2Filter(clientRegistrationRepository, customOAuth2UserService, oAuth2SuccessHandler, oAuth2FailureHandler), OAuth2AuthorizationRequestRedirectFilter.class)
+                .authorizeHttpRequests(request -> request.requestMatchers("/h2-console/**","/auth/success","/error","/login/**","/oauth2/**").permitAll().anyRequest().authenticated())
                 .build();
     }
 }

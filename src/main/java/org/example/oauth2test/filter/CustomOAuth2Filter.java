@@ -6,8 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
+import org.example.oauth2test.handler.OAuth2FailureHandler;
 import org.example.oauth2test.handler.OAuth2SuccessHandler;
 import org.example.oauth2test.util.OAuth2SdkProvider;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -33,11 +36,12 @@ public class CustomOAuth2Filter extends OncePerRequestFilter {
     private final String LOGIN_PATTERN = "/sdk/oauth2/authorization/{registrationId}";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
-        if (pathMatcher.match(LOGIN_PATTERN, servletPath) && "POST".equalsIgnoreCase(request.getMethod())) {
+        if (pathMatcher.match(LOGIN_PATTERN, servletPath) && "POST" .equalsIgnoreCase(request.getMethod())) {
             try {
                 Map<String, String> variables = pathMatcher.extractUriTemplateVariables(LOGIN_PATTERN, servletPath);
                 String registrationId = variables.get("registrationId");
@@ -80,11 +84,14 @@ public class CustomOAuth2Filter extends OncePerRequestFilter {
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
 
+                request.setAttribute("isSdkLogin", true);
                 oAuth2SuccessHandler.onAuthenticationSuccess(request, response, authentication);
                 return;
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증 실패: " + e.getMessage());
+                request.setAttribute("isSdkLogin", true);
+                AuthenticationException authException = new InternalAuthenticationServiceException(e.getMessage(), e);
+                oAuth2FailureHandler.onAuthenticationFailure(request, response, authException);
                 return;
             }
         }
