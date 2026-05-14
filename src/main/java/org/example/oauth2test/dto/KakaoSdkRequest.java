@@ -19,7 +19,7 @@ public class KakaoSdkRequest implements OAuth2SdkRequest {
     @NoArgsConstructor
     public static class AuthObj {
         @NotBlank(message = "액세스 토큰은 필수입니다.")
-        @JsonProperty("access_token") // JSON의 access_token을 이 필드에 매핑
+        @JsonProperty("access_token")
         private String accessToken;
 
         @JsonProperty("refresh_token")
