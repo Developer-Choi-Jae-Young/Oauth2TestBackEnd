@@ -17,7 +17,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExchange;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import tools.jackson.databind.ObjectMapper;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 
-@Component
 @RequiredArgsConstructor
 public class CustomOAuth2Filter extends OncePerRequestFilter {
     private final ClientRegistrationRepository clientRegistrationRepository;

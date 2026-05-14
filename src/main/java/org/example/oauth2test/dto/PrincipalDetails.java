@@ -61,6 +61,6 @@ public class PrincipalDetails implements OAuth2User, UserDetails {
 
     @Override
     public String getUsername() {
-        return memberEntity.getMemberId();
+        return memberEntity.getMemberNo().toString();
     }
 }

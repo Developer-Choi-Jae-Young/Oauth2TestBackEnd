@@ -24,6 +24,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        System.out.println("URL: " + userRequest.getClientRegistration().getRegistrationId());
+        System.out.println("Thread ID: " + Thread.currentThread().getId());
+
         Map<String, Object> oAuth2UserAttributes = super.loadUser(userRequest).getAttributes();
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
@@ -41,14 +44,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private MemberEntity getOrSave(OAuth2UserInfo oAuth2UserInfo) {
-        return memberRepository.findByEmail(oAuth2UserInfo.getEmail())
+        return memberRepository.findById(oAuth2UserInfo.getId())
                 .map(member -> {
                     return memberRepository.save(member);
                 })
                 .orElseGet(() -> {
                     MemberEntity newMember = MemberEntity.builder()
-                            .email(oAuth2UserInfo.getEmail())
-                            .memberId(oAuth2UserInfo.getEmail().split("@")[0])
+                            .memberNo(oAuth2UserInfo.getId())
                             .role(ROLE.USER)
                             .build();
                     return memberRepository.save(newMember);
