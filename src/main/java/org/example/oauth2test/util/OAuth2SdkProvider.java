@@ -1,22 +1,19 @@
 package org.example.oauth2test.util;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.example.oauth2test.dto.KakaoSdkRequest;
 import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
 
 @Getter
-public enum OAuth2Provider {
+@AllArgsConstructor
+public enum OAuth2SdkProvider {
     KAKAO("kakao", KakaoSdkRequest.class);
 
     private final String registrationId;
     private final Class<? extends OAuth2SdkRequest> dtoClass;
 
-    OAuth2Provider(String registrationId, Class<? extends OAuth2SdkRequest> dtoClass) {
-        this.registrationId = registrationId;
-        this.dtoClass = dtoClass;
-    }
-
-    public static OAuth2Provider findByRegistrationId(String id) {
+    public static OAuth2SdkProvider findByRegistrationId(String id) {
         return java.util.Arrays.stream(values())
                 .filter(provider -> provider.registrationId.equalsIgnoreCase(id))
                 .findFirst()

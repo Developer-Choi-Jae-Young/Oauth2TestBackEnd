@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -46,7 +47,7 @@ public class TokenProvider {
 
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining());
+                .collect(Collectors.joining(","));
 
         return Jwts.builder()
                 .subject(authentication.getName())
@@ -66,8 +67,10 @@ public class TokenProvider {
     }
 
     private List<SimpleGrantedAuthority> getAuthorities(Claims claims) {
-        return Collections.singletonList(new SimpleGrantedAuthority(
-                claims.get(KEY_ROLE).toString()));
+        return Arrays.stream(claims.get(KEY_ROLE).toString().split(","))
+                         .filter(auth -> !auth.isEmpty())
+                         .map(SimpleGrantedAuthority::new)
+                         .collect(Collectors.toList());
     }
 
     public boolean validateToken(String token) {

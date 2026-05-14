@@ -1,5 +1,6 @@
 package org.example.oauth2test.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
@@ -7,11 +8,12 @@ import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
 @Getter
 @NoArgsConstructor
 public class KakaoSdkRequest implements OAuth2SdkRequest {
-    private String access_token;
-    private String refresh_token;
+    @NotBlank(message = "액세스 토큰은 필수입니다.")
+    private String accessToken;
+    private String refreshToken;
 
     @Override
     public String getAccessToken() {
-        return access_token;
+        return accessToken;
     }
 }

@@ -6,7 +6,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
-import org.example.oauth2test.util.OAuth2Provider;
+import org.example.oauth2test.handler.OAuth2SuccessHandler;
+import org.example.oauth2test.util.OAuth2SdkProvider;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -19,7 +20,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
@@ -34,6 +34,7 @@ public class CustomOAuth2Filter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
     private final String LOGIN_PATTERN = "/sdk/oauth2/authorization/{registrationId}";
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -43,7 +44,7 @@ public class CustomOAuth2Filter extends OncePerRequestFilter {
                 Map<String, String> variables = pathMatcher.extractUriTemplateVariables(LOGIN_PATTERN, servletPath);
                 String registrationId = variables.get("registrationId");
 
-                Class<? extends OAuth2SdkRequest> dtoClass = OAuth2Provider
+                Class<? extends OAuth2SdkRequest> dtoClass = OAuth2SdkProvider
                         .findByRegistrationId(registrationId)
                         .getDtoClass();
 
@@ -80,6 +81,9 @@ public class CustomOAuth2Filter extends OncePerRequestFilter {
                 var context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
+
+                oAuth2SuccessHandler.onAuthenticationSuccess(request, response, authentication);
+                return;
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "인증 실패: " + e.getMessage());
