@@ -2,12 +2,10 @@ package org.example.oauth2test.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.oauth2test.dto.PrincipalDetails;
-import org.example.oauth2test.dto.interf.OAuth2SdkRequest;
 import org.example.oauth2test.dto.interf.OAuth2UserInfo;
 import org.example.oauth2test.entity.MemberEntity;
 import org.example.oauth2test.entity.num.ROLE;
 import org.example.oauth2test.repository.MemberRepository;
-import org.example.oauth2test.util.OAuth2SdkProvider;
 import org.example.oauth2test.util.OAuth2UserInfoProvider;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
